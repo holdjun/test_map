@@ -730,6 +730,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
           background:var(--reset-bg); border:1px solid var(--reset-bd); border-radius:22px; padding:8px 16px;
           font-size:12px; font-weight:700; color:var(--reset-ink); box-shadow:0 4px 14px rgba(0,0,0,.18); }
   .reset.show{ display:inline-block; }
+  .locate{ position:absolute; bottom:12px; right:12px; z-index:1000; width:40px; height:40px; border-radius:50%;
+           border:1px solid var(--reset-bd); background:var(--reset-bg); color:var(--reset-ink); font-size:18px;
+           line-height:1; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.18); transition:opacity .2s; }
+  .locate.busy{ opacity:.45; pointer-events:none; }
+  @keyframes pulse{ 0%{transform:scale(.6);opacity:.7} 100%{transform:scale(2.6);opacity:0} }
+  .you-dot{ position:relative; width:16px; height:16px; }
+  .you-dot::before{ content:''; position:absolute; left:50%; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px;
+           border-radius:50%; background:#1a73e8; animation:pulse 1.6s ease-out infinite; }
+  .you-dot::after{ content:''; position:absolute; left:50%; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px;
+           border-radius:50%; background:#1a73e8; border:2.5px solid #fff; box-shadow:0 0 4px rgba(0,0,0,.45); }
   .panel{ flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
           padding:12px max(12px,env(safe-area-inset-left)) calc(28px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right)); }
   table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; background:var(--card);
@@ -767,6 +777,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <div class="strip"></div>
 <div id="map">
   <button class="reset" id="reset" onclick="resetView()">↺ 显示全部路线</button>
+  <button class="locate" id="locate" title="我的位置" aria-label="我的位置">📍</button>
 </div>
 <div class="panel">
   <table>
@@ -862,11 +873,12 @@ const ITIN = [
 ];
 
 /* ---------- 地图 ---------- */
-const map = L.map('map', { zoomControl:false, attributionControl:false }).setView([43.9, 82.6], 7);
+// preferCanvas：折线/圆点用 Canvas 渲染，移动端平移缩放更顺滑（共约 2700 个顶点）
+const map = L.map('map', { zoomControl:false, attributionControl:false, preferCanvas:true }).setView([43.9, 82.6], 7);
 L.tileLayer('https://wprd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}',
   { subdomains:['1','2','3','4'], maxZoom:18 }).addTo(map);
 
-const layers = {};    // day -> {main, casing, pts, color, ring?} 或 {circle, center, color}
+const layers = {};    // day -> {main, casing, pts, color, bounds, ring?} 或 {circle, center, color, bounds}
 const DAYNODES = {};  // day -> [节点key]，用于按天显示标签
 ITIN.filter(d=>d.legs).forEach(d=>{
   const pts = d.legs.flatMap(k=>PATH[k]||[]);
@@ -875,7 +887,7 @@ ITIN.filter(d=>d.legs).forEach(d=>{
   const main = L.polyline(pts, { color:d.color, weight:5, opacity:.95, lineJoin:'round', lineCap:'round' }).addTo(map)
     .bindTooltip(`${d.day} · ${d.dist}`, { sticky:true });
   main.on('click', ()=>selectDay(d.day));
-  layers[d.day] = { main, casing, pts, color:d.color };
+  layers[d.day] = { main, casing, pts, color:d.color, bounds:main.getBounds() };  // bounds 预算，选中时不再重算
   if(d.seq) DAYNODES[d.day] = d.seq.slice();
 });
 // D7 赛里木湖环线（约 91km，虚线支线，随 D7 高亮）
@@ -884,13 +896,14 @@ if(PATH.ring && layers['D7']){
     .addTo(map).bindTooltip('D7 赛里木湖环湖 ~91km', { sticky:true });
   ring.on('click', ()=>selectDay('D7'));
   layers['D7'].ring = ring;
+  layers['D7'].bounds = layers['D7'].bounds.extend(ring.getBounds());
 }
 // D4 那拉提景区整天
 const d4c = [(N.xc.lat+N.dyss.lat)/2, (N.xc.lon+N.dyss.lon)/2];
 const d4circle = L.circle(d4c, { radius:11000, color:'#1abc9c', weight:3, dashArray:'9,6', fill:true, fillColor:'#1abc9c', fillOpacity:0 })
   .addTo(map).bindTooltip('D4 那拉提景区整天', { sticky:true });
 d4circle.on('click', ()=>selectDay('D4'));
-layers['D4'] = { circle:d4circle, center:d4c, color:'#1abc9c' };
+layers['D4'] = { circle:d4circle, center:d4c, color:'#1abc9c', bounds:d4circle.getBounds() };
 DAYNODES['D4'] = ['xc','dyss'];
 
 // 标记点逻辑：每日住宿点(终点)+起终点 = 锚点，常驻标签；中途点(游客中心/乔尔玛/唐布拉/薰衣草)只在选中当天时显示
@@ -909,18 +922,16 @@ Object.entries(N).filter(([,n])=>!n.mapless).forEach(([key,n])=>{
     .bindPopup(`<b>${n.short}</b><br><a class="navbtn" href="${navTo(n)}">🧭 高德导航到这里</a>`);
   nodeMarkers[key] = { marker:m, anchor };
 });
+// 选中某天：只保留当天的点（其余直接移出图层，不渲染也不响应点击）；还原：全部点亮，锚点常驻标签
 function showLabels(keys){
   for(const k in nodeMarkers){
     const nm = nodeMarkers[k], m = nm.marker;
-    if(keys){                                   // 选中某天：只显示当天的点
-      const on = keys.includes(k);
-      m.setStyle({ opacity:on?1:0, fillOpacity:on?1:0 });
-      if(m._path) m._path.style.pointerEvents = on?'':'none';
-      if(on) m.openTooltip(); else m.closeTooltip();
-    } else {                                    // 还原：全部点亮，关键点常驻标签
-      m.setStyle({ opacity:1, fillOpacity:1 });
-      if(m._path) m._path.style.pointerEvents = '';
-      if(nm.anchor) m.openTooltip(); else m.closeTooltip();
+    const show = keys ? keys.includes(k) : true;
+    if(show){
+      if(!map.hasLayer(m)) m.addTo(map);
+      if(keys || nm.anchor) m.openTooltip(); else m.closeTooltip();
+    } else if(map.hasLayer(m)){
+      map.removeLayer(m);
     }
   }
 }
@@ -928,6 +939,7 @@ const ALLB = L.latLngBounds(Object.values(N).filter(n=>!n.mapless).map(n=>[n.lat
 map.whenReady(()=>{ setTimeout(()=>{ map.invalidateSize(); map.fitBounds(ALLB.pad(0.12)); }, 60); });
 
 /* ---------- 选中高亮 ---------- */
+const resetBtn = document.getElementById('reset');
 let activeDay = null;
 function selectDay(day){
   if(activeDay === day){ resetView(); return; }
@@ -943,15 +955,13 @@ function selectDay(day){
     if(L_.circle){ L_.circle.setStyle({ opacity:on?1:.15, fillOpacity:on?.12:0 }); }
   }
   const L_ = layers[day];
-  let b = L_ && L_.pts ? L.latLngBounds(L_.pts) : null;
-  if(L_ && L_.ring) b = b ? b.extend(L.latLngBounds(PATH.ring)) : L.latLngBounds(PATH.ring);
-  if(b) map.flyToBounds(b.pad(0.18), { duration:.6 });
+  if(L_ && L_.bounds) map.flyToBounds(L_.bounds.pad(0.18), { duration:.6 });
   else if(L_ && L_.center) map.flyTo(L_.center, 10, { duration:.6 });
   showLabels(DAYNODES[day]);
   document.querySelectorAll('tr.active').forEach(r=>r.classList.remove('active'));
   const row = document.querySelector(`tr[data-day="${day}"]`);
-  if(row){ row.classList.add('active'); }
-  document.getElementById('reset').classList.add('show');
+  if(row) row.classList.add('active');
+  resetBtn.classList.add('show');
 }
 function resetView(){
   if(activeDay === null) return;
@@ -965,7 +975,7 @@ function resetView(){
   showLabels(null);
   document.querySelectorAll('tr.active').forEach(r=>r.classList.remove('active'));
   map.flyToBounds(ALLB.pad(0.12), { duration:.6 });
-  document.getElementById('reset').classList.remove('show');
+  resetBtn.classList.remove('show');
 }
 map.on('click', resetView);
 
@@ -1012,6 +1022,30 @@ document.querySelectorAll('tr[data-day]').forEach(tr=>{
     selectDay(tr.dataset.day);
   });
 });
+
+/* ---------- 我的位置（只加标记，不改变默认/复位视野；点按钮才飞过去）---------- */
+(function(){
+  const btn = document.getElementById('locate');
+  const youIcon = L.divIcon({ className:'', html:'<div class="you-dot"></div>', iconSize:[16,16] });
+  let mk = null, acc = null;
+  btn.addEventListener('click', ()=>{
+    if(!navigator.geolocation){ alert('当前环境不支持定位'); return; }
+    btn.classList.add('busy');
+    navigator.geolocation.getCurrentPosition(p=>{
+      btn.classList.remove('busy');
+      const ll = [p.coords.latitude, p.coords.longitude], r = p.coords.accuracy || 0;
+      if(mk){ mk.setLatLng(ll); acc.setLatLng(ll).setRadius(r); }
+      else{
+        acc = L.circle(ll, { radius:r, color:'#1a73e8', weight:1, fillColor:'#1a73e8', fillOpacity:.12, interactive:false }).addTo(map);
+        mk  = L.marker(ll, { icon:youIcon, zIndexOffset:1000 }).addTo(map).bindPopup('<b>我的位置</b>');
+      }
+      map.flyTo(ll, Math.max(map.getZoom(), 9), { duration:.6 });  // 仅此处随用户主动点击移动
+    }, e=>{
+      btn.classList.remove('busy');
+      alert(e.code===1 ? '定位被拒绝，请在浏览器允许定位权限' : '暂时无法获取位置，请重试');
+    }, { enableHighAccuracy:true, timeout:8000, maximumAge:60000 });
+  });
+})();
 </script>
 </body>
 </html>
