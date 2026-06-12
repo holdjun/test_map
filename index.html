@@ -716,45 +716,39 @@ svg.leaflet-image-layer.leaflet-interactive path {
           #2980b9 57.2% 71.5%, #8e44ad 71.5% 85.8%, #d81b60 85.8% 100%); }
   #map{ flex:0 0 auto; height:46vh; width:100%; background:var(--bg); position:relative; }
   .leaflet-tile-pane{ filter:var(--tilef); }
-  .pt-label{ background:var(--label-bg); border:1.5px solid var(--label-bd); border-radius:4px; padding:2px 6px;
-             font-size:11px; font-weight:700; color:var(--label-ink); box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .pt-label{ background:var(--label-bg); border:1.5px solid var(--label-bd); border-radius:9px; padding:3px 8px;
+             font-size:11px; font-weight:700; color:var(--label-ink); box-shadow:0 1px 4px rgba(0,0,0,.22); }
   .pt-label.start{ border-color:#e74c3c; }
   .pt-label.end{ border-color:#d81b60; }
   .pt-label.hub{ border-color:#16a085; }
-  .legend{ position:absolute; top:8px; right:8px; z-index:1000; background:var(--legend); color:var(--ink);
-           border-radius:10px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.25); font-size:11.5px;
-           backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
-  .legend .it{ display:flex; align-items:center; gap:6px; margin:3px 0; cursor:pointer; border-radius:5px; padding:1px 3px; }
-  .legend .it:active{ background:rgba(127,127,127,.18); }
-  .legend .sw{ width:22px; height:5px; border-radius:3px; flex:0 0 auto; }
-  .leaflet-popup-content{ margin:10px 12px; font-size:13px; }
-  .leaflet-popup-content-wrapper,.leaflet-popup-tip{ background:var(--card); color:var(--ink); }
+  .leaflet-popup-content{ margin:11px 14px; font-size:13px; }
+  .leaflet-popup-content-wrapper{ background:var(--card); color:var(--ink); border-radius:16px; }
+  .leaflet-popup-tip{ background:var(--card); color:var(--ink); }
   .navbtn{ display:inline-block; margin-top:6px; background:#0a8f4d; color:#fff; text-decoration:none;
-           padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; }
-  .reset{ position:absolute; bottom:10px; left:10px; z-index:1000; display:none;
-          background:var(--reset-bg); border:1px solid var(--reset-bd); border-radius:20px; padding:7px 14px;
-          font-size:12px; font-weight:700; color:var(--reset-ink); box-shadow:0 2px 8px rgba(0,0,0,.25); }
+           padding:7px 14px; border-radius:22px; font-size:12px; font-weight:700; }
+  .reset{ position:absolute; bottom:12px; left:12px; z-index:1000; display:none;
+          background:var(--reset-bg); border:1px solid var(--reset-bd); border-radius:22px; padding:8px 16px;
+          font-size:12px; font-weight:700; color:var(--reset-ink); box-shadow:0 4px 14px rgba(0,0,0,.18); }
   .reset.show{ display:inline-block; }
-  .panel{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
-          padding:10px max(10px,env(safe-area-inset-left)) calc(28px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right)); }
-  .panel .hint{ font-size:11.5px; color:var(--mut); margin:2px 4px 10px; }
-  table{ width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden;
-         box-shadow:0 1px 6px var(--shadow); font-size:13px; }
+  .panel{ flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+          padding:12px max(12px,env(safe-area-inset-left)) calc(28px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right)); }
+  table{ width:100%; border-collapse:separate; border-spacing:0; background:var(--card); border-radius:20px; overflow:hidden;
+         box-shadow:0 2px 14px var(--shadow); font-size:13px; }
   th,td{ padding:9px 8px; vertical-align:top; border-bottom:1px solid var(--line2); text-align:left; }
   th{ background:var(--th); font-size:12px; color:var(--sub); font-weight:600; }
   tr:last-child td{ border-bottom:none; }
   td.day{ white-space:nowrap; width:1%; }
   td.dist{ white-space:nowrap; width:1%; color:var(--sub); font-variant-numeric:tabular-nums; }
   td.stay{ width:1%; min-width:96px; }
-  .chip{ display:inline-block; color:#fff; border-radius:7px; padding:2px 8px; font-weight:800; font-size:12px; }
+  .chip{ display:inline-block; color:#fff; border-radius:10px; padding:2px 9px; font-weight:800; font-size:12px; }
   .date{ display:block; color:var(--mut); font-size:11px; margin-top:3px; }
   .node{ font-weight:700; }
   .leg{ display:inline-block; color:var(--c); font-weight:800; text-decoration:none;
         border-bottom:2px solid var(--c); line-height:1.9; padding:0 2px; white-space:nowrap; }
   .leg:active{ opacity:.55; }
   .tip{ color:var(--mut); font-size:11px; margin-top:4px; line-height:1.5; }
-  .story{ margin-top:5px; background:var(--story-bg); color:var(--story-ink); border-radius:6px;
-          padding:5px 8px; font-size:11px; line-height:1.6; }
+  .story{ margin-top:5px; background:var(--story-bg); color:var(--story-ink); border-radius:11px;
+          padding:6px 10px; font-size:11px; line-height:1.6; }
   .stayA{ color:var(--stay); text-decoration:none; font-weight:700; }
   .stayA.flat{ color:var(--mut); font-weight:600; }
   tr.transit td{ background:var(--transit); color:var(--transit-ink); }
@@ -769,21 +763,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <header>
   <h1>伊犁环线自驾</h1>
   <button class="theme" id="theme" title="切换日间/夜间" aria-label="切换主题">🌙</button>
-  <span class="sub">D-2 → D8 · 自驾约 1,030 km · 点击「路段 / 住宿」直接唤起高德导航</span>
 </header>
 <div class="strip"></div>
 <div id="map">
-  <div class="legend" id="legend"></div>
   <button class="reset" id="reset" onclick="resetView()">↺ 显示全部路线</button>
 </div>
 <div class="panel">
-  <div class="hint">👆 点某一行 → 地图高亮该天路线（再点一次或「↺ 显示全部」复位）。🧭 点彩色「→里程/时间→」导航该路段，点「🛏 住宿」导航到酒店。</div>
-  <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Day</th><th>路线（每段可点导航）</th><th>里程/纯驾</th><th>住宿</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+  <table>
+    <thead><tr><th>Day</th><th>路线（每段可点导航）</th><th>里程/纯驾</th><th>住宿</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
 </div>
 
 <script>
@@ -901,17 +890,21 @@ d4circle.on('click', ()=>selectDay('D4'));
 layers['D4'] = { circle:d4circle, center:d4c, color:'#1abc9c' };
 DAYNODES['D4'] = ['xc','dyss'];
 
-// 标记点：关键点(start/end/hub)常驻标签，其余点击/悬停显示，减少手机端拥挤
+// 标记点逻辑：每日住宿点(终点)+起终点 = 锚点，常驻标签；中途点(游客中心/乔尔玛/唐布拉/薰衣草)只在选中当天时显示
+const STAYS = new Set(ITIN.map(d=>d.stayKey).filter(Boolean));
+Object.entries(N).forEach(([k,n])=>{ if(n.role==='start'||n.role==='end') STAYS.add(k); });
 const nodeMarkers = {};
 Object.entries(N).filter(([,n])=>!n.mapless).forEach(([key,n])=>{
-  const role = n.role||'';
-  const color = role==='start'?'#e74c3c':role==='end'?'#d81b60':role==='hub'?'#16a085':'#555';
-  const r = role?9:6;
+  const anchor = STAYS.has(key);
+  const isStart = n.role==='start', isEnd = n.role==='end';
+  const cls = isStart?'start':isEnd?'end':anchor?'hub':'';
+  const color = isStart?'#e74c3c':isEnd?'#d81b60':anchor?'#16a085':'#9aa3ad';
+  const r = anchor?8:5;
   const m = L.circleMarker([n.lat,n.lon], { radius:r, color:'#fff', weight:2.2, fillColor:color, fillOpacity:1 })
     .addTo(map)
-    .bindTooltip(n.short, { permanent:!!role, direction:'top', offset:[0,-7], className:'pt-label '+role })
+    .bindTooltip(n.short, { permanent:anchor, direction:'top', offset:[0,-7], className:'pt-label '+cls })
     .bindPopup(`<b>${n.short}</b><br><a class="navbtn" href="${navTo(n)}">🧭 高德导航到这里</a>`);
-  nodeMarkers[key] = { marker:m, role };
+  nodeMarkers[key] = { marker:m, anchor };
 });
 function showLabels(keys){
   for(const k in nodeMarkers){
@@ -924,7 +917,7 @@ function showLabels(keys){
     } else {                                    // 还原：全部点亮，关键点常驻标签
       m.setStyle({ opacity:1, fillOpacity:1 });
       if(m._path) m._path.style.pointerEvents = '';
-      if(nm.role) m.openTooltip(); else m.closeTooltip();
+      if(nm.anchor) m.openTooltip(); else m.closeTooltip();
     }
   }
 }
@@ -972,18 +965,6 @@ function resetView(){
   document.getElementById('reset').classList.remove('show');
 }
 map.on('click', resetView);
-
-/* ---------- 图例（可点选）---------- */
-document.getElementById('legend').innerHTML =
-  ITIN.filter(d=>d.color).map(d=>{
-    const sw = d.type==='stay'
-      ? `<span class="sw" style="background:repeating-linear-gradient(90deg,${d.color} 0 6px,transparent 6px 10px)"></span>`
-      : `<span class="sw" style="background:${d.color}"></span>`;
-    return `<div class="it" data-day="${d.day}">${sw}<span>${d.day} ${d.dist!=='—'?d.dist:'景区'}</span></div>`;
-  }).join('');
-document.querySelectorAll('.legend .it[data-day]').forEach(it=>{
-  it.addEventListener('click', ()=>selectDay(it.dataset.day));
-});
 
 /* ---------- 表格 ---------- */
 function routeCell(d){
