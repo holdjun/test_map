@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>伊犁环线自驾 · 行程地图</title>
 <style>
 /* Leaflet 1.9.4 (inlined) */
@@ -670,47 +671,80 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 </style>
 <style>
-  :root{ --bg:#f7f5f0; --card:#fff; --ink:#222; --mut:#8a8a8a; }
+  :root{
+    --bg:#f7f5f0; --card:#fff; --ink:#222; --mut:#8a8a8a; --sub:#555;
+    --line:#eee; --line2:#f0efeb; --th:#fafafa; --transit:#fbfaf7; --transit-ink:#777;
+    --active:#fff7df; --row-press:#f3f1ea; --shadow:rgba(0,0,0,.07);
+    --legend:rgba(255,255,255,.94); --reset-bg:#fff; --reset-bd:#ddd; --reset-ink:#333;
+    --stay:#0a66c2; --story-bg:#f4f6f8; --story-ink:#5a6675;
+    --label-bg:#fff; --label-ink:#222; --label-bd:#888;
+    --tilef:grayscale(80%) contrast(.9) brightness(1.06);
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#101218; --card:#1a1d24; --ink:#e8eaef; --mut:#99a1ad; --sub:#aab2bf;
+    --line:#2a2e38; --line2:#252932; --th:#20242d; --transit:#171a20; --transit-ink:#8a92a0;
+    --active:#33301a; --row-press:#23272f; --shadow:rgba(0,0,0,.5);
+    --legend:rgba(26,29,36,.92); --reset-bg:#1a1d24; --reset-bd:#3a3f4a; --reset-ink:#dfe3ea;
+    --stay:#6fb2ff; --story-bg:#1f242c; --story-ink:#9aa6b6;
+    --label-bg:#222834; --label-ink:#e8eaef; --label-bd:#49515f;
+    --tilef:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) grayscale(.25);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#101218; --card:#1a1d24; --ink:#e8eaef; --mut:#99a1ad; --sub:#aab2bf;
+    --line:#2a2e38; --line2:#252932; --th:#20242d; --transit:#171a20; --transit-ink:#8a92a0;
+    --active:#33301a; --row-press:#23272f; --shadow:rgba(0,0,0,.5);
+    --legend:rgba(26,29,36,.92); --reset-bg:#1a1d24; --reset-bd:#3a3f4a; --reset-ink:#dfe3ea;
+    --stay:#6fb2ff; --story-bg:#1f242c; --story-ink:#9aa6b6;
+    --label-bg:#222834; --label-ink:#e8eaef; --label-bd:#49515f;
+    --tilef:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) grayscale(.25);
+  }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ height:100%; }
-  body{ margin:0; background:var(--bg); color:var(--ink); height:100vh; overflow:hidden;
+  body{ margin:0; background:var(--bg); color:var(--ink); height:100vh; height:100dvh; overflow:hidden;
         display:flex; flex-direction:column;
         font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
-  header{ flex:0 0 auto; padding:10px 14px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
-          background:#fff; border-bottom:1px solid #eee; z-index:1200; }
+  header{ flex:0 0 auto; padding:calc(10px + env(safe-area-inset-top)) 14px 10px; display:flex;
+          align-items:center; gap:8px; flex-wrap:wrap; background:var(--card);
+          padding-left:max(14px,env(safe-area-inset-left)); padding-right:max(14px,env(safe-area-inset-right));
+          border-bottom:1px solid var(--line); z-index:1200; }
   header h1{ margin:0; font-size:17px; }
-  header .sub{ font-size:12px; color:var(--mut); }
+  header .sub{ font-size:12px; color:var(--mut); flex:1 1 100%; }
+  .theme{ margin-left:auto; border:1px solid var(--line); background:transparent; color:var(--ink);
+          width:32px; height:32px; border-radius:50%; font-size:15px; cursor:pointer; line-height:1; }
   .strip{ flex:0 0 auto; height:4px; background:linear-gradient(90deg,
           #e74c3c 0 14.3%, #e67e22 14.3% 28.6%, #16a085 28.6% 42.9%, #1abc9c 42.9% 57.2%,
           #2980b9 57.2% 71.5%, #8e44ad 71.5% 85.8%, #d81b60 85.8% 100%); }
-  #map{ flex:0 0 auto; height:46vh; width:100%; background:#eee; position:relative; }
-  .leaflet-tile-pane{ filter:grayscale(80%) contrast(.9) brightness(1.06); }
-  .pt-label{ background:#fff; border:1.5px solid #888; border-radius:4px; padding:2px 6px;
-             font-size:11px; font-weight:700; color:#222; box-shadow:0 1px 3px rgba(0,0,0,.25); }
-  .pt-label.start{ background:#ffe5e0; border-color:#e74c3c; }
-  .pt-label.end{ background:#fde2ec; border-color:#d81b60; }
-  .pt-label.hub{ background:#e8f6f3; border-color:#16a085; }
-  .legend{ position:absolute; top:8px; right:8px; z-index:1000; background:rgba(255,255,255,.94);
-           border-radius:10px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.18); font-size:11.5px; }
+  #map{ flex:0 0 auto; height:46vh; width:100%; background:var(--bg); position:relative; }
+  .leaflet-tile-pane{ filter:var(--tilef); }
+  .pt-label{ background:var(--label-bg); border:1.5px solid var(--label-bd); border-radius:4px; padding:2px 6px;
+             font-size:11px; font-weight:700; color:var(--label-ink); box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .pt-label.start{ border-color:#e74c3c; }
+  .pt-label.end{ border-color:#d81b60; }
+  .pt-label.hub{ border-color:#16a085; }
+  .legend{ position:absolute; top:8px; right:8px; z-index:1000; background:var(--legend); color:var(--ink);
+           border-radius:10px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.25); font-size:11.5px;
+           backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
   .legend .it{ display:flex; align-items:center; gap:6px; margin:3px 0; cursor:pointer; border-radius:5px; padding:1px 3px; }
-  .legend .it:active{ background:#eee; }
+  .legend .it:active{ background:rgba(127,127,127,.18); }
   .legend .sw{ width:22px; height:5px; border-radius:3px; flex:0 0 auto; }
   .leaflet-popup-content{ margin:10px 12px; font-size:13px; }
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{ background:var(--card); color:var(--ink); }
   .navbtn{ display:inline-block; margin-top:6px; background:#0a8f4d; color:#fff; text-decoration:none;
            padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; }
   .reset{ position:absolute; bottom:10px; left:10px; z-index:1000; display:none;
-          background:#fff; border:1px solid #ddd; border-radius:20px; padding:7px 14px;
-          font-size:12px; font-weight:700; color:#333; box-shadow:0 2px 8px rgba(0,0,0,.18); }
+          background:var(--reset-bg); border:1px solid var(--reset-bd); border-radius:20px; padding:7px 14px;
+          font-size:12px; font-weight:700; color:var(--reset-ink); box-shadow:0 2px 8px rgba(0,0,0,.25); }
   .reset.show{ display:inline-block; }
-  .panel{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px 10px 28px; }
+  .panel{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+          padding:10px max(10px,env(safe-area-inset-left)) calc(28px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right)); }
   .panel .hint{ font-size:11.5px; color:var(--mut); margin:2px 4px 10px; }
   table{ width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden;
-         box-shadow:0 1px 6px rgba(0,0,0,.07); font-size:13px; }
-  th,td{ padding:9px 8px; vertical-align:top; border-bottom:1px solid #f0efeb; text-align:left; }
-  th{ background:#fafafa; font-size:12px; color:#555; font-weight:600; }
+         box-shadow:0 1px 6px var(--shadow); font-size:13px; }
+  th,td{ padding:9px 8px; vertical-align:top; border-bottom:1px solid var(--line2); text-align:left; }
+  th{ background:var(--th); font-size:12px; color:var(--sub); font-weight:600; }
   tr:last-child td{ border-bottom:none; }
   td.day{ white-space:nowrap; width:1%; }
-  td.dist{ white-space:nowrap; width:1%; color:#555; font-variant-numeric:tabular-nums; }
+  td.dist{ white-space:nowrap; width:1%; color:var(--sub); font-variant-numeric:tabular-nums; }
   td.stay{ width:1%; min-width:96px; }
   .chip{ display:inline-block; color:#fff; border-radius:7px; padding:2px 8px; font-weight:800; font-size:12px; }
   .date{ display:block; color:var(--mut); font-size:11px; margin-top:3px; }
@@ -719,19 +753,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
         border-bottom:2px solid var(--c); line-height:1.9; padding:0 2px; white-space:nowrap; }
   .leg:active{ opacity:.55; }
   .tip{ color:var(--mut); font-size:11px; margin-top:4px; line-height:1.5; }
-  .stayA{ color:#0a66c2; text-decoration:none; font-weight:700; }
-  .stayA.flat{ color:#999; font-weight:600; }
-  tr.transit td{ background:#fbfaf7; color:#777; }
+  .story{ margin-top:5px; background:var(--story-bg); color:var(--story-ink); border-radius:6px;
+          padding:5px 8px; font-size:11px; line-height:1.6; }
+  .stayA{ color:var(--stay); text-decoration:none; font-weight:700; }
+  .stayA.flat{ color:var(--mut); font-weight:600; }
+  tr.transit td{ background:var(--transit); color:var(--transit-ink); }
   tr.transit .node, tr.transit{ font-weight:500; }
   tr.selectable{ cursor:pointer; }
-  tr.selectable:active td{ background:#f3f1ea; }
-  tr.active td{ background:#fff7df; }
+  tr.selectable:active td{ background:var(--row-press); }
+  tr.active td{ background:var(--active); }
   tr.active td.day{ box-shadow:inset 4px 0 0 var(--rc,#333); }
 </style>
 </head>
 <body>
 <header>
   <h1>伊犁环线自驾</h1>
+  <button class="theme" id="theme" title="切换日间/夜间" aria-label="切换主题">🌙</button>
   <span class="sub">D-2 → D8 · 自驾约 1,030 km · 点击「路段 / 住宿」直接唤起高德导航</span>
 </header>
 <div class="strip"></div>
@@ -772,6 +809,24 @@ const PATH = {
 "d7":[[44.61879,81.38519],[44.61856,81.38513],[44.61861,81.38413],[44.61846,81.38393],[44.61734,81.38371],[44.61676,81.38385],[44.61465,81.38524],[44.61454,81.38518],[44.6126,81.39361],[44.61151,81.39592],[44.61102,81.39669],[44.60969,81.39804],[44.60655,81.40062],[44.6039,81.40246],[44.60981,81.42134],[44.61137,81.42825],[44.61214,81.43094],[44.6132,81.43302],[44.61392,81.43396],[44.61532,81.4352],[44.61546,81.43582],[44.6137,81.44065],[44.61302,81.44354],[44.61284,81.44608],[44.61312,81.45047],[44.61304,81.45185],[44.61248,81.45309],[44.61034,81.4563],[44.61008,81.4575],[44.61038,81.45841],[44.61161,81.45962],[44.6122,81.46119],[44.61308,81.4659],[44.61457,81.476],[44.61424,81.48469],[44.6151,81.49418],[44.6153,81.49809],[44.61384,81.52552],[44.61421,81.5283],[44.61606,81.53545],[44.61624,81.53773],[44.61614,81.53915],[44.61548,81.54176],[44.61171,81.54946],[44.60951,81.55608],[44.60877,81.55774],[44.60769,81.55947],[44.60319,81.56575],[44.60096,81.57007],[44.59671,81.58178],[44.59629,81.58437],[44.5964,81.58647],[44.59683,81.58834],[44.5975,81.58985],[44.59857,81.59136],[44.59989,81.59242],[44.60111,81.59291],[44.602,81.59304],[44.60302,81.59296],[44.60666,81.59202],[44.60817,81.59205],[44.60954,81.59236],[44.61095,81.59301],[44.6122,81.59395],[44.61375,81.59576],[44.61465,81.59729],[44.61577,81.6003],[44.61787,81.61023],[44.61889,81.61388],[44.62646,81.63458],[44.62792,81.63809],[44.63012,81.64202],[44.6375,81.6524],[44.64258,81.66178],[44.64424,81.6645],[44.6469,81.66783],[44.65164,81.67238],[44.65262,81.67379],[44.65349,81.67555],[44.65657,81.68498],[44.6581,81.69049],[44.66103,81.70418],[44.66143,81.70682],[44.6616,81.70986],[44.66141,81.71287],[44.66077,81.71631],[44.65647,81.73102],[44.65567,81.7357],[44.65479,81.74505],[44.65411,81.74735],[44.65303,81.74934],[44.65218,81.75042],[44.6511,81.75134],[44.65017,81.75189],[44.64894,81.75235],[44.63326,81.75463],[44.63163,81.75505],[44.62959,81.75609],[44.62235,81.76129],[44.62085,81.76264],[44.61847,81.76528],[44.61687,81.76756],[44.61477,81.77141],[44.61387,81.77356],[44.6127,81.77709],[44.61188,81.78064],[44.61138,81.78415],[44.61117,81.78788],[44.61135,81.79956],[44.61188,81.80482],[44.61251,81.80791],[44.62755,81.8699],[44.62815,81.87354],[44.63396,81.91956],[44.63434,81.92415],[44.63527,81.94868],[44.63445,81.99113],[44.63053,82.06592],[44.62998,82.06977],[44.63012,82.07339],[44.62952,82.07944],[44.62886,82.08371],[44.62851,82.08482],[44.6281,82.08547],[44.62762,82.08553],[44.62725,82.08513],[44.62719,82.08453],[44.62738,82.08393],[44.62772,82.08342],[44.62817,82.08311],[44.63738,82.07923],[44.6391,82.07907],[44.64188,82.0795],[44.64309,82.07985],[44.64453,82.07993],[44.69238,82.08777],[44.69416,82.08831],[44.69524,82.08882],[44.70164,82.09286],[44.70284,82.09341],[44.7041,82.0937],[44.70587,82.09371],[44.70887,82.09298],[44.71038,82.09283],[44.7344,82.09407],[44.73879,82.09426],[44.7403,82.09418],[44.74314,82.09337],[44.74467,82.09255],[44.74761,82.09044],[44.74936,82.0894],[44.76775,82.08117],[44.76929,82.07985],[44.77622,82.0713],[44.77827,82.06924],[44.7931,82.05875],[44.79548,82.05721],[44.79692,82.05703],[44.85557,82.05982],[44.85569,82.05172],[44.85388,82.05172]]
 };
 
+/* ---------- 主题（跟随系统 + 手动切换，记忆选择）---------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById('theme');
+  const sysDark = matchMedia('(prefers-color-scheme:dark)');
+  const saved = localStorage.getItem('theme');   // 'light' | 'dark' | null(跟随系统)
+  if(saved) root.setAttribute('data-theme', saved);
+  const isDark = () => (root.getAttribute('data-theme') || (sysDark.matches?'dark':'light')) === 'dark';
+  const sync = () => { btn.textContent = isDark() ? '☀️' : '🌙'; };
+  sync();
+  sysDark.addEventListener('change', sync);
+  btn.addEventListener('click', ()=>{
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    sync();
+  });
+})();
+
 // 节点（高德 GCJ-02 坐标，lon/lat）。short=表格显示，name=导航名
 const N = {
   yn:   {short:'伊宁·福朋喜来登', name:'伊宁福朋喜来登酒店', lon:81.280468, lat:43.946971, role:'start'},
@@ -796,13 +851,20 @@ const navLeg = (a,b) => `https://uri.amap.com/navigation?from=${a.lon},${a.lat},
 const ITIN = [
   {type:'transit', day:'D-2', date:'6/12 五', route:'✈ 上海虹桥 21:20 → 重庆 00:05', dist:'—', stay:'重庆机场附近'},
   {type:'transit', day:'D-1', date:'6/13 六', route:'✈ 重庆 8:45 → 乌鲁木齐 12:50　🚄 C847 17:10 → 伊宁 22:09', dist:'—', stayKey:'yn'},
-  {type:'drive', day:'D1', date:'6/14 日', color:'#e74c3c', seq:['yn','klj'], legs:['d1'], labels:['145km / 2.5h'], dist:'145km / 2.5h', stayKey:'hjy', tip:'阔克苏大峡谷'},
-  {type:'drive', day:'D2', date:'6/15 一', color:'#e67e22', seq:['hjy','tks'], legs:['d2'], labels:['全天自驾 · 37km / 0.8h'], dist:'37km / 0.8h', stayKey:'tks', tip:'喀拉峻东门游客中心全天自驾 · 八卦城'},
-  {type:'drive', day:'D3', date:'6/16 二', color:'#16a085', seq:['tks','xc'], legs:['d3'], labels:['220km / 3.7h'], dist:'220km / 3.7h', stayKey:'xc', tip:'那拉提河谷草原 · 景区游玩'},
-  {type:'stay',  day:'D4', date:'6/17 三', color:'#1abc9c', route:'那拉提景区 · 全天游玩', dist:'—', stayKey:'dyss', tip:'空中草原 · 河谷草原'},
-  {type:'drive', day:'D5', date:'6/18 四', color:'#2980b9', seq:['dyss','qem','tbl','nlk'], legs:['d5a','d5b','d5c'], labels:['94km / 2.6h','38km / 0.8h','133km / 2.2h'], dist:'265km / 5.6h', stayKey:'nlk', tip:'独库北段 · 唐布拉草原'},
-  {type:'drive', day:'D6', date:'6/19 五', color:'#8e44ad', seq:['nlk','hc','slm'], legs:['d6a','d6b'], labels:['171km / 2.1h','98km / 1.5h'], dist:'269km / 3.6h', stayKey:'slm', tip:'薰衣草 · 果子沟 · 赛湖日落'},
-  {type:'drive', day:'D7', date:'6/20 六', color:'#d81b60', seq:['slm','bl'], legs:['d7'], labels:['92km / 1.2h'], dist:'92km / 1.2h', stayKey:'haiyou', suffix:'还车', tip:'赛里木湖环湖约 90km · 博乐 18:20 🚄 C866 → 乌鲁木齐 22:47'},
+  {type:'drive', day:'D1', date:'6/14 日', color:'#e74c3c', seq:['yn','klj'], legs:['d1'], labels:['145km / 2.5h'], dist:'145km / 2.5h', stayKey:'hjy', tip:'阔克苏大峡谷',
+    story:'🛣️ 省道+景区路，柏油为主、路况好。⛰️ 伊宁约660m → 喀拉峻约1500m+；阔克苏河谷深切，看 S 形大拐弯。'},
+  {type:'drive', day:'D2', date:'6/15 一', color:'#e67e22', seq:['hjy','tks'], legs:['d2'], labels:['全天自驾 · 37km / 0.8h'], dist:'37km / 0.8h', stayKey:'tks', tip:'喀拉峻东门游客中心全天自驾 · 八卦城',
+    story:'⛰️ 喀拉峻空中草原约 2000–2900m，盘山道弯多、早晚低温备外套。🛣️ 景区内需区间车/自驾换乘。'},
+  {type:'drive', day:'D3', date:'6/16 二', color:'#16a085', seq:['tks','xc'], legs:['d3'], labels:['220km / 3.7h'], dist:'220km / 3.7h', stayKey:'xc', tip:'那拉提河谷草原 · 景区游玩',
+    story:'🛣️ 220km 经巩留/新源河谷，国道+省道；翻山段弯多、限速严，预留 ~3.7h。'},
+  {type:'stay',  day:'D4', date:'6/17 三', color:'#1abc9c', route:'那拉提景区 · 全天游玩', dist:'—', stayKey:'dyss', tip:'空中草原 · 河谷草原',
+    story:'⛰️ 那拉提景区约 1800–2200m；空中草原需换乘区间车，河谷草原以游步道为主。'},
+  {type:'drive', day:'D5', date:'6/18 四', color:'#2980b9', seq:['dyss','qem','tbl','nlk'], legs:['d5a','d5b','d5c'], labels:['94km / 2.6h','38km / 0.8h','133km / 2.2h'], dist:'265km / 5.6h', stayKey:'nlk', tip:'独库北段 · 唐布拉草原',
+    story:'⭐ 独库公路 G217 北段精华。⛰️ 乔尔玛约 2000m（独库纪念碑）；唐布拉百里画廊沿喀什河雪山草原。⚠️ 路窄弯急、雨雪/落石季慎行，通常 6–10 月通车。'},
+  {type:'drive', day:'D6', date:'6/19 五', color:'#8e44ad', seq:['nlk','hc','slm'], legs:['d6a','d6b'], labels:['171km / 2.1h','98km / 1.5h'], dist:'269km / 3.6h', stayKey:'slm', tip:'薰衣草 · 果子沟 · 赛湖日落',
+    story:'⭐ 途经果子沟大桥（赛果高速地标高架）。⛰️ 赛里木湖约 2070m、昼夜温差大；霍城薰衣草 6 月中下旬盛花。'},
+  {type:'drive', day:'D7', date:'6/20 六', color:'#d81b60', seq:['slm','bl'], legs:['d7'], labels:['92km / 1.2h'], dist:'92km / 1.2h', stayKey:'haiyou', suffix:'还车', tip:'赛里木湖环湖约 90km · 博乐 18:20 🚄 C866 → 乌鲁木齐 22:47',
+    story:'🛣️ 环湖公路 ~91km，柏油平整、沿湖观景台多。⛰️ 赛湖约 2070m 下行至博乐约 530m 还车。'},
   {type:'transit', day:'D8', date:'6/21 日', route:'✈ 乌鲁木齐天山 10:00 → 浦东 14:45', dist:'—', stay:'回家'},
 ];
 
@@ -929,6 +991,7 @@ function routeCell(d){
     html += `<span class="node">${d.route||''}</span>`;
   }
   if(d.tip) html += `<div class="tip">${d.tip}</div>`;
+  if(d.story) html += `<div class="story">${d.story}</div>`;
   return html;
 }
 const stayIcon = s => /营/.test(s) ? '⛺' : /民宿/.test(s) ? '🏠' : '🏨';
