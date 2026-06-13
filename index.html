@@ -848,8 +848,19 @@ const N = {
   haiyou:{short:'海友·乌市机场店', name:'海友酒店乌鲁木齐天山国际机场店', lon:87.508469, lat:43.903330, mapless:true},
 };
 const ll = k => [N[k].lat, N[k].lon];
-const navTo  = n => `https://uri.amap.com/navigation?to=${n.lon},${n.lat},${encodeURIComponent(n.name)}&mode=car&policy=1&coordinate=gaode&callnative=1&src=yili_route`;
-const navLeg = (a,b) => `https://uri.amap.com/navigation?from=${a.lon},${a.lat},${encodeURIComponent(a.name)}&to=${b.lon},${b.lat},${encodeURIComponent(b.name)}&mode=car&policy=1&coordinate=gaode&callnative=1&src=yili_route`;
+const SRC = 'yili_route';
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isMobile = isIOS || /android/i.test(navigator.userAgent);
+// web 中转页：桌面端使用，移动端未唤起 App 时兜底
+const navTo  = n => `https://uri.amap.com/navigation?to=${n.lon},${n.lat},${encodeURIComponent(n.name)}&mode=car&policy=1&coordinate=gaode&callnative=1&src=${SRC}`;
+const navLeg = (a,b) => `https://uri.amap.com/navigation?from=${a.lon},${a.lat},${encodeURIComponent(a.name)}&to=${b.lon},${b.lat},${encodeURIComponent(b.name)}&mode=car&policy=1&coordinate=gaode&callnative=1&src=${SRC}`;
+// App deeplink：点击直唤高德，绕过中转网页（dev=0 因坐标为 GCJ-02，t=0 为驾车）
+const schemeTo  = n     => isIOS
+  ? `iosamap://path?sourceApplication=${SRC}&dlat=${n.lat}&dlon=${n.lon}&dname=${encodeURIComponent(n.name)}&dev=0&t=0`
+  : `amapuri://route/plan/?sourceApplication=${SRC}&dlat=${n.lat}&dlon=${n.lon}&dname=${encodeURIComponent(n.name)}&dev=0&t=0`;
+const schemeLeg = (a,b) => isIOS
+  ? `iosamap://path?sourceApplication=${SRC}&slat=${a.lat}&slon=${a.lon}&sname=${encodeURIComponent(a.name)}&dlat=${b.lat}&dlon=${b.lon}&dname=${encodeURIComponent(b.name)}&dev=0&t=0`
+  : `amapuri://route/plan/?sourceApplication=${SRC}&slat=${a.lat}&slon=${a.lon}&sname=${encodeURIComponent(a.name)}&dlat=${b.lat}&dlon=${b.lon}&dname=${encodeURIComponent(b.name)}&dev=0&t=0`;
 
 // 行程：drive=自驾段(seq/labels)，stay=景区整天，transit=飞机/高铁
 const ITIN = [
@@ -919,7 +930,7 @@ Object.entries(N).filter(([,n])=>!n.mapless).forEach(([key,n])=>{
   const m = L.circleMarker([n.lat,n.lon], { radius:r, color:'#fff', weight:2.2, fillColor:color, fillOpacity:1 })
     .addTo(map)
     .bindTooltip(n.short, { permanent:anchor, direction:'top', offset:[0,-7], className:'pt-label '+cls })
-    .bindPopup(`<b>${n.short}</b><br><a class="navbtn" href="${navTo(n)}">🧭 高德导航到这里</a>`);
+    .bindPopup(`<b>${n.short}</b><br><a class="navbtn" href="${navTo(n)}" data-scheme="${schemeTo(n)}">🧭 高德导航到这里</a>`);
   nodeMarkers[key] = { marker:m, anchor };
 });
 // 选中某天：只保留当天的点（其余直接移出图层，不渲染也不响应点击）；还原：全部点亮，锚点常驻标签
@@ -986,7 +997,7 @@ function routeCell(d){
     const ns = d.seq.map(k=>N[k]);
     html += `<span class="node">${ns[0].short}</span>`;
     for(let i=0;i<d.labels.length;i++){
-      html += ` <a class="leg" style="--c:${d.color}" href="${navLeg(ns[i],ns[i+1])}">→ ${d.labels[i]} →</a> `;
+      html += ` <a class="leg" style="--c:${d.color}" href="${navLeg(ns[i],ns[i+1])}" data-scheme="${schemeLeg(ns[i],ns[i+1])}">→ ${d.labels[i]} →</a> `;
       const last = i===d.labels.length-1;
       html += `<span class="node">${ns[i+1].short}${last&&d.suffix?' · '+d.suffix:''}</span>`;
     }
@@ -999,7 +1010,7 @@ function routeCell(d){
 }
 const stayIcon = s => /营/.test(s) ? '⛺' : /民宿/.test(s) ? '🏠' : '🏨';
 function stayCell(d){
-  if(d.stayKey){ const n=N[d.stayKey]; return `<a class="stayA" href="${navTo(n)}">${stayIcon(n.short)} ${n.short}</a>`; }
+  if(d.stayKey){ const n=N[d.stayKey]; return `<a class="stayA" href="${navTo(n)}" data-scheme="${schemeTo(n)}">${stayIcon(n.short)} ${n.short}</a>`; }
   return `<span class="stayA flat">${d.stay||''}</span>`;
 }
 document.getElementById('tbody').innerHTML = ITIN.map(d=>{
@@ -1022,6 +1033,24 @@ document.querySelectorAll('tr[data-day]').forEach(tr=>{
     selectDay(tr.dataset.day);
   });
 });
+
+// 移动端：导航链接先唤起高德 App，1.2s 内未切走则回落到 web 中转页
+if(isMobile){
+  document.addEventListener('click', e=>{
+    const a = e.target.closest('a[data-scheme]');
+    if(!a) return;
+    e.preventDefault();
+    const web = a.getAttribute('href'), scheme = a.getAttribute('data-scheme');
+    let switched = false;
+    const onHide = () => { switched = true; };
+    document.addEventListener('visibilitychange', onHide, { once:true });
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if(!switched && !document.hidden) location.href = web;
+    }, 1200);
+    location.href = scheme;
+  });
+}
 
 /* ---------- 我的位置（只加标记，不改变默认/复位视野；点按钮才飞过去）---------- */
 (function(){
